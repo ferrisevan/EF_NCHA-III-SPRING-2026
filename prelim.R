@@ -292,3 +292,5 @@ cat("Saved data/ncha_clean.rds\n")
 #
 # Yes/No outcomes are already 0/1, so a logistic model just runs:
 #   glm(N3Q54B ~ belonging + age, data = dat, family = binomial)
+
+View(ncha_clean)
