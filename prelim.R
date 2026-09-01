@@ -163,3 +163,132 @@ stopifnot(
 )
 cat("Range checks passed.\n")
 
+# ---- 6. Reliability -----------------------------------------
+# Checks whether the questions in each scale hang together. These
+# are published measures, so a low number means my code broke
+# something. Expect ~.90 / ~.85 / ~.80.
+
+alpha_of <- function(items)
+  suppressWarnings(psych::alpha(as.data.frame(dat[items]))$total$raw_alpha)
+
+rel <- data.frame(
+  scale = c("Flourishing","K6","UCLA-3","Belonging","Safety","CD-RISC-2"),
+  alpha = round(c(alpha_of(flourish), alpha_of(k6i), alpha_of(ucla),
+                  alpha_of(belong), alpha_of(safety_i), alpha_of(cdrisc)), 3)
+)
+print(rel)
+write.csv(rel, "out/scale_reliability.csv", row.names = FALSE)
+
+
+# ---- 7. Demographics as factors -----------------------------
+# Class year coded 1-6 is not a quantity. Left as
+# a number, the model fits one straight line from freshman to grad
+# student instead of comparing the groups. Wrong, with no warning.
+# as_factor() also keeps the text labels, so results read
+# "Sophomore" instead of "2".
+
+# Only the demographics that are actually in the file are listed
+# below. Sex at birth, gender identity, orientation, and race were
+# not collected, so they're gone from here on purpose.
+
+# Two ways to find a column, tried in order. The question ID is
+# checked first. If the export renamed it, the question wording is
+# searched instead. The .sav carries the text of every question,
+# and the wording doesn't change even when the name does.
+
+q_text <- sapply(dat, function(x) {
+  a <- attr(x, "label"); if (is.null(a)) "" else a
+})
+
+find_col <- function(id, text) {
+  hit <- grep(paste0("^R?", id, "(_[0-9]+)?$"), names(dat), value = TRUE)
+  if (length(hit) == 1) return(hit)
+  hit <- names(q_text)[grepl(text, q_text, ignore.case = TRUE)]
+  if (length(hit) >= 1) return(hit[1])
+  NA_character_
+}
+
+demo <- list(
+  class_yr = c("N3Q72",  "your year in school"),
+  enroll   = c("N3Q73",  "enrollment status"),
+  intl     = c("N3Q74A", "international student"),
+  relation = c("N3Q76",  "your relationship status"),
+  housing  = c("N3Q78",  "where do you currently live")
+)
+
+for (nm in names(demo)) {
+  col <- find_col(demo[[nm]][1], demo[[nm]][2])
+  if (!is.na(col)) {
+    dat[[nm]] <- as_factor(dat[[col]])
+    cat(nm, "<-", col, "\n")
+  } else {
+    warning("[", nm, "] not found by ID or question text -- skipped.",
+            call. = FALSE)
+  }
+}
+
+# Athletics, disability, and greek life are grids: one column per
+# option, not one column per question. Collapse each to a single
+# yes/no. These already went through Section 3, so a yes is now a 1,
+# not a 2. Any 1 across the row means yes.
+
+any_yes <- function(pattern) {
+  cols <- grep(pattern, names(dat), value = TRUE)
+  if (!length(cols)) return(NULL)
+  m   <- as.matrix(dat[cols])
+  out <- factor(if_else(rowSums(m == 1, na.rm = TRUE) > 0, "Yes", "No"),
+                levels = c("No", "Yes"))
+  out[rowSums(!is.na(m)) == 0] <- NA
+  out
+}
+
+dat$athlete    <- any_yes("^R?N3Q81[A-C]$")
+dat$disability <- any_yes("^R?N3Q82[A-G]$")
+dat$greek      <- any_yes("^R?N3Q77[AB]$")
+
+for (nm in c("athlete", "disability", "greek"))
+  if (!is.null(dat[[nm]])) { cat("\n--", nm, "--\n"); print(table(dat[[nm]], useNA = "ifany")) }
+
+# Age is a real number, so it stays numeric.
+age_col <- find_col("N3Q69", "how old are you")
+if (!is.na(age_col)) dat$age <- as.numeric(dat[[age_col]])
+
+# First-gen: neither parent finished a bachelor's (codes 1-4).
+# Code 8 is "Don't know" and must be blank, not continuing-gen.
+pe_col <- find_col("N3Q84", "highest level of education completed by either")
+if (!is.na(pe_col)) {
+  pe <- as.numeric(dat[[pe_col]]); pe[pe == 8] <- NA
+  dat$first_gen <- factor(if_else(pe <= 4, "First-gen", "Continuing-gen"),
+                          levels = c("Continuing-gen", "First-gen"))
+  print(table(dat$first_gen, useNA = "ifany"))
+}
+
+
+# ---- 7b. What I can and can't compare -----------------------
+# Prints the group variables that survived, so I know what my
+# predictor list can actually contain. Anything not on this list
+# either wasn't collected or wasn't found.
+
+have <- c("class_yr", "enroll", "intl", "relation", "housing",
+          "athlete", "disability", "greek", "first_gen", "age")
+have <- have[have %in% names(dat)]
+
+cat("\n-- Group variables available --\n")
+print(have)
+cat("\nNot available (not collected): sex at birth, gender identity,",
+    "sexual orientation, race/ethnicity\n")
+
+
+# ---- 8. Save ------------------------------------------------
+# zap_labels() drops the internal SPSS codes that some packages
+# choke on but keeps the question wording, so tables read "How often
+# did you feel nervous?" instead of "N3Q44A".
+
+dat <- zap_labels(dat)
+saveRDS(dat, "data/ncha_clean.rds")
+cat("Saved data/ncha_clean.rds\n")
+
+# Next session:  dat <- readRDS("data/ncha_clean.rds")
+#
+# Yes/No outcomes are already 0/1, so a logistic model just runs:
+#   glm(N3Q54B ~ belonging + age, data = dat, family = binomial)
