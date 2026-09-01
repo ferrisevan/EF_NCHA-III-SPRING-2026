@@ -117,3 +117,49 @@ if (length(assist)) {
                   ~ case_when(. == 0 ~ 0, . == 3 ~ 1),
                   .names = "{.col}_bin"))
   cat("ASSIST columns given 0/1 copies:", length(assist), "\n")
+}
+
+# ---- 4. Build the scores ------------------------------------
+# Adds each set of questions into one score. Answered at least 80%?
+# Average what they gave and scale it up. Below that the score is
+# blank. The person stays in the data, they just sit out models
+# using that one score.
+
+score <- function(items) {
+  m <- as.matrix(dat[items]); k <- length(items)
+  out <- rowMeans(m, na.rm = TRUE) * k
+  out[rowSums(!is.na(m)) < ceiling(0.8 * k)] <- NA
+  out
+}
+
+dat <- dat %>%
+  mutate(
+    flourishing = score(flourish),   # higher = better
+    k6          = score(k6i),        # higher = worse
+    loneliness  = score(ucla),       # higher = lonelier
+    belonging   = score(belong),     # higher = connected
+    safety      = score(safety_i),   # higher = safer
+    cdrisc2     = score(cdrisc),     # higher = resilient
+    k6_serious  = if_else(k6 >= 13, 1, 0)   # clinical cutoff
+  )
+
+
+# ---- 5. Sanity check ----------------------------------------
+# Confirms each score landed inside its only possible range. A
+# distress score of 47 on a 0-24 scale means something broke above.
+
+check <- function(x, lo, hi) {
+  r <- range(x, na.rm = TRUE)
+  r[1] >= lo && r[2] <= hi
+}
+
+stopifnot(
+  check(dat$flourishing, 8, 56),
+  check(dat$k6,          0, 24),
+  check(dat$loneliness,  3, 9),
+  check(dat$belonging,   4, 24),
+  check(dat$safety,      4, 16),
+  check(dat$cdrisc2,     0, 8)
+)
+cat("Range checks passed.\n")
+
