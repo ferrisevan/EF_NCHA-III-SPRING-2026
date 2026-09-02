@@ -308,8 +308,8 @@ cat("\nNot available (not collected): sex at birth, gender identity,",
 
 
 # ---- 8. Save ------------------------------------------------
-# zap_labels() drops the internal SPSS codes that some packages
-# choke on but keeps the question wording, so tables read "How often
+# zap_labels() drops the internal SPSS codes 
+# but keeps the question wording, so tables read "How often
 # did you feel nervous?" instead of "N3Q44A".
 
 dat <- zap_labels(dat)
