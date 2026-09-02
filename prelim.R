@@ -1,3 +1,4 @@
+# =============================================================
 # NCHA-IIIb (Spring 2026, UTK)
 #
 # Only what's needed to make the data analyzable:
@@ -125,8 +126,8 @@ if (length(assist)) {
 # blank. The person stays in the data, they just sit out models
 # using that one score.
 
-score <- function(items) {
-  m <- as.matrix(dat[items]); k <- length(items)
+score <- function(df, items) {
+  m <- as.matrix(df[items]); k <- length(items)
   out <- rowMeans(m, na.rm = TRUE) * k
   out[rowSums(!is.na(m)) < ceiling(0.8 * k)] <- NA
   out
@@ -134,12 +135,12 @@ score <- function(items) {
 
 dat <- dat %>%
   mutate(
-    flourishing = score(flourish),   # higher = better
-    k6          = score(k6i),        # higher = worse
-    loneliness  = score(ucla),       # higher = lonelier
-    belonging   = score(belong),     # higher = connected
-    safety      = score(safety_i),   # higher = safer
-    cdrisc2     = score(cdrisc),     # higher = resilient
+    flourishing = score(., flourish),   # higher = better
+    k6          = score(., k6i),        # higher = worse
+    loneliness  = score(., ucla),       # higher = lonelier
+    belonging   = score(., belong),     # higher = connected
+    safety      = score(., safety_i),   # higher = safer
+    cdrisc2     = score(., cdrisc),     # higher = resilient
     k6_serious  = if_else(k6 >= 13, 1, 0)   # clinical cutoff
   )
 
@@ -167,9 +168,13 @@ cat("Range checks passed.\n")
 # Checks whether the questions in each scale hang together. These
 # are published measures, so a low number means my code broke
 # something. Expect ~.90 / ~.85 / ~.80.
+#
+# The warnings are left switched on. If an item runs backwards,
+# alpha() says so, and that message is the only thing that would
+# catch a reverse-coding problem.
 
 alpha_of <- function(items)
-  suppressWarnings(psych::alpha(as.data.frame(dat[items]))$total$raw_alpha)
+  psych::alpha(as.data.frame(dat[items]), check.keys = FALSE)$total$raw_alpha
 
 rel <- data.frame(
   scale = c("Flourishing","K6","UCLA-3","Belonging","Safety","CD-RISC-2"),
@@ -195,6 +200,10 @@ write.csv(rel, "out/scale_reliability.csv", row.names = FALSE)
 # checked first. If the export renamed it, the question wording is
 # searched instead. The .sav carries the text of every question,
 # and the wording doesn't change even when the name does.
+#
+# The wording search warns when it fires, so a column that got
+# matched by text instead of by ID is something I see rather than
+# something I find out about later.
 
 q_text <- sapply(dat, function(x) {
   a <- attr(x, "label"); if (is.null(a)) "" else a
@@ -204,7 +213,11 @@ find_col <- function(id, text) {
   hit <- grep(paste0("^R?", id, "(_[0-9]+)?$"), names(dat), value = TRUE)
   if (length(hit) == 1) return(hit)
   hit <- names(q_text)[grepl(text, q_text, ignore.case = TRUE)]
-  if (length(hit) >= 1) return(hit[1])
+  if (length(hit) >= 1) {
+    warning("[", id, "] not found by ID -- matched by question text to '",
+            hit[1], "'. Verify this is right.", call. = FALSE)
+    return(hit[1])
+  }
   NA_character_
 }
 
@@ -227,26 +240,41 @@ for (nm in names(demo)) {
   }
 }
 
-# Athletics, disability, and greek life are grids: one column per
-# option, not one column per question. Collapse each to a single
-# yes/no. These already went through Section 3, so a yes is now a 1,
-# not a 2. Any 1 across the row means yes.
+# Athletics and disability are grids: one column per option, not one
+# column per question. Collapse each to a single yes/no. These
+# already went through Section 3, so a yes is now a 1, not a 2.
+# Any 1 across the row means yes.
+#
+# Anyone who saw none of the columns is left blank, NOT counted as a
+# No. If the printed table below shows a big pile of NA, that block
+# was behind skip logic and the blanks are really Nos -- switch the
+# not_asked argument to 0 for that variable.
 
-any_yes <- function(pattern) {
+any_yes <- function(pattern, not_asked = NA) {
   cols <- grep(pattern, names(dat), value = TRUE)
   if (!length(cols)) return(NULL)
   m   <- as.matrix(dat[cols])
-  out <- factor(if_else(rowSums(m == 1, na.rm = TRUE) > 0, "Yes", "No"),
-                levels = c("No", "Yes"))
-  out[rowSums(!is.na(m)) == 0] <- NA
+  hit <- rowSums(m == 1, na.rm = TRUE) > 0
+  out <- factor(if_else(hit, "Yes", "No"), levels = c("No", "Yes"))
+  if (is.na(not_asked)) out[rowSums(!is.na(m)) == 0] <- NA
   out
 }
 
 dat$athlete    <- any_yes("^R?N3Q81[A-C]$")
 dat$disability <- any_yes("^R?N3Q82[A-G]$")
-dat$greek      <- any_yes("^R?N3Q77[AB]$")
 
-for (nm in c("athlete", "disability", "greek"))
+# Greek life comes from the membership question alone (N3Q77A).
+# N3Q77B asks whether they live in a chapter house, which is only
+# shown to members and isn't a difference I care about.
+
+greek_col <- grep("^R?N3Q77A$", names(dat), value = TRUE)
+if (length(greek_col) == 1) {
+  dat$greek_any <- factor(case_when(dat[[greek_col]] == 0 ~ "No",
+                                    dat[[greek_col]] == 1 ~ "Yes"),
+                          levels = c("No", "Yes"))
+}
+
+for (nm in c("athlete", "disability", "greek_any"))
   if (!is.null(dat[[nm]])) { cat("\n--", nm, "--\n"); print(table(dat[[nm]], useNA = "ifany")) }
 
 # Age is a real number, so it stays numeric.
@@ -270,7 +298,7 @@ if (!is.na(pe_col)) {
 # either wasn't collected or wasn't found.
 
 have <- c("class_yr", "enroll", "intl", "relation", "housing",
-          "athlete", "disability", "greek", "first_gen", "age")
+          "athlete", "disability", "greek_any", "first_gen", "age")
 have <- have[have %in% names(dat)]
 
 cat("\n-- Group variables available --\n")
@@ -293,4 +321,4 @@ cat("Saved data/ncha_clean.rds\n")
 # Yes/No outcomes are already 0/1, so a logistic model just runs:
 #   glm(N3Q54B ~ belonging + age, data = dat, family = binomial)
 
-View(ncha_clean)
+View(dat)
