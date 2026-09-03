@@ -247,7 +247,7 @@ for (nm in names(demo)) {
 #
 # Anyone who saw none of the columns is left blank, NOT counted as a
 # No. If the printed table below shows a big pile of NA, that block
-# was behind skip logic and the blanks are really Nos -- switch the
+# was behind skip logic and the blanks are really Nos, switch the
 # not_asked argument to 0 for that variable.
 
 any_yes <- function(pattern, not_asked = NA) {
@@ -265,7 +265,7 @@ dat$disability <- any_yes("^R?N3Q82[A-G]$")
 
 # Greek life comes from the membership question alone (N3Q77A).
 # N3Q77B asks whether they live in a chapter house, which is only
-# shown to members and isn't a difference I care about.
+# shown to members (7 out of 127) and isn't a difference I care about.
 
 greek_col <- grep("^R?N3Q77A$", names(dat), value = TRUE)
 if (length(greek_col) == 1) {
