@@ -3,15 +3,16 @@
 #
 # Checking the validity of my tidying and cleanup by
 # running analyses that can be compared to the UTK
-# executive summary. Substance use (4 types), first-gen
-# student outcomes, and substance use x belonging, 
+# executive summary and the NCHA general summary. 
+# Substance use (4 types), first-gen student 
+# outcomes, and substance use x belonging, 
 # loneliness, and wellbeing correlation and regression.
 # I will also create visualizations to aid in explaining
 # the data.
 #
 #
-# Substance use among UTK students, looking at alcohol,
-# binge drinking, nicotine, and cannabis first.
+# ------- 1. Substance use among UTK students ------- 
+# Looking at alcohol, binge drinking, nicotine, and cannabis usage at UTK.
 
 library(tidyverse)
 dat <- readRDS("data/ncha_clean.rds")
@@ -46,8 +47,22 @@ prev <- tibble(
 # using nicotine products, and 23.9% reported
 # using cannabis.
 #
-# NCHA reference group stats (past 3 months; binge drinking is 
-# past 2 weeks): 56.2% reported using alchohol,
+# NCHA reference group stats (past 3 months; binge drinking 
+# is past 2 weeks): 56.2% reported using alchohol,
 # 17.4% reported binge drinking, 18.2% reported
 # using nicotine products, and 22.9% reported
 # using cannabis.
+#
+# ------- 2. Visualizing the substance use data -------
+# Now, I will build a simple visualization of my
+# UTK data for easy comparison between sources.
+
+ggplot(prev, aes(x = reorder(substance, pct), y = pct)) +
+  geom_col(fill = "orange", width = 0.6) +
+  geom_text(aes(label = paste0(pct, "%")), hjust = -0.2) +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, 80), expand = c(0, 0)) +
+  labs(title = "Substance use among UTK students",
+       subtitle = "Past 3 months; binge drinking is past 2 weeks",
+       x = NULL, y = "% of students") +
+  theme_minimal()
