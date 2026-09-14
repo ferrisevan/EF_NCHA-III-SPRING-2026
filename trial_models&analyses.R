@@ -157,3 +157,32 @@ cat("est = points higher for first-gen. If low-high crosses 0, no clear gap.\n\n
 print(adj, row.names = FALSE)
 write.csv(adj, "out/firstgen_adjusted.csv", row.names = FALSE)
 
+# ---- 5. The chart -------------------------------------------
+# The scores use different ranges, so raw averages can't share an
+# axis. Converting to standard deviations makes the bars
+# comparable to each other.
+
+plot_dat <- lapply(names(outs), function(v) {
+  z <- as.numeric(scale(dat[[v]]))
+  data.frame(measure = outs[v],
+             d = mean(z[dat$first_gen == "First-gen"], na.rm = TRUE) -
+               mean(z[dat$first_gen == "Continuing-gen"], na.rm = TRUE))
+}) %>% bind_rows()
+
+f <- ggplot(plot_dat, aes(reorder(measure, d), d, fill = d > 0)) +
+  geom_col(width = 0.65, show.legend = FALSE) +
+  geom_hline(yintercept = 0, color = "grey") +
+  coord_flip() +
+  scale_fill_manual(values = c("TRUE" = "red", "FALSE" = "blue")) +
+  labs(title = "First-generation vs. continuing-generation students",
+       subtitle = "Right of the line = higher for first-gen students",
+       x = NULL, y = "Difference (standard deviations)",
+       caption = "NCHA-IIIb | UTK | Spring 2026") +
+  theme_minimal(base_size = 15) +
+  theme(plot.title = element_text(face = "bold", size = 17),
+        plot.subtitle = element_text(color = "grey", size = 10),
+        panel.grid.major.y = element_blank(),
+        axis.text = element_text(color = "black"))
+
+print(f)
+ggsave("out/fig_firstgen.png", f, width = 8, height = 5, dpi = 300)
