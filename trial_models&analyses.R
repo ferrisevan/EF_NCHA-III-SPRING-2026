@@ -68,8 +68,8 @@ ggplot(prev, aes(x = reorder(substance, pct), y = pct)) +
        x = NULL, y = "% of students") +
   theme_minimal()
 
-# ============FIRST-GENERATION ANALYSIS=========================
-
+# ============FIRST-GEN VS. CONT-GEN ANALYSIS=========================
+#
 # ---- 1. Did I build first_gen right? ------------------------
 # ACHA already scored this and got 25.6%. If mine is close, the
 # cutoff is right. If it's off by a lot, it's wrong.
@@ -101,7 +101,7 @@ print(dat %>% group_by(first_gen) %>%
 
 # ---- 3. The comparison table --------------------------------
 # Average score for each group, side by side, with a test for
-# whether the gap is bigger than chance. No controls yet.
+# whether the gap is bigger than chance.
 
 outs <- c(k6          = "Distress (0-24)",
           flourishing = "Wellbeing (8-56)",
@@ -128,12 +128,6 @@ tab$p     <- round(tab$p, 3)
 cat("\n===== Scores by group: mean (SD) =====\n")
 print(tab, row.names = FALSE)
 write.csv(tab, "out/firstgen_table1.csv", row.names = FALSE)
-
-
-# ---- 4. Does the gap survive controls? ----------------------
-# Section 3 asks "are they different." This asks "are they
-# different for reasons other than age and year in school."
-# If a gap vanishes here, the raw one was really an age gap.
 
 ctrl <- c("age", "class_yr")
 ctrl <- ctrl[ctrl %in% names(dat)]
@@ -186,3 +180,64 @@ f <- ggplot(plot_dat, aes(reorder(measure, d), d, fill = d > 0)) +
 
 print(f)
 ggsave("out/fig_firstgen.png", f, width = 8, height = 5, dpi = 300)
+
+#==============SUBSTANCE USE X WELLBEING, BELONGING, LONELINESS=============
+#
+# ---- 1. Mark who used each substance --------------------------
+# 
+# Students who never saw the nicotine or binge
+# questions were skipped because of an earlier answer, so a blank
+# means no. And the cannabis question lists answers from most
+# recent to least, so recent users are the middle codes.
+
+col1 <- function(p) {
+  h <- grep(p, names(dat), value = TRUE)
+  stopifnot(length(h) == 1)
+  h
+}
+
+q25 <- col1("^R?N3Q25A$")    # alcohol, how recently
+q24 <- col1("^R?N3Q24$")     # cannabis, how recently
+q28 <- col1("^R?N3Q28$")     # binge episodes, last 2 weeks
+
+nic <- grep("^R?N3Q23[A-K]$", names(dat), value = TRUE)
+stopifnot(length(nic) == 11)
+
+nm <- as.matrix(dat[nic])
+
+dat <- dat %>%
+  mutate(
+    alcohol  = as.integer(.data[[q25]] %in% 2:4),
+    binge    = if_else(is.na(.data[[q28]]), 0L, as.integer(.data[[q28]] >= 2)),
+    cannabis = as.integer(.data[[q24]] %in% 2:4),
+    nicotine = as.integer(rowSums(nm == 1, na.rm = TRUE) > 0)
+  )
+
+# ---- 2. How the four wellbeing scores relate ------------------
+# Do these four measure separate things, or
+# are they the same thing wearing different hats?
+#
+
+scores <- c("belonging", "loneliness", "k6", "flourishing")
+
+cat("===== How the four scores correlate =====\n")
+print(round(cor(dat[scores], use = "pairwise.complete.obs"), 2))
+
+# ---- 3. Raw correlations with substance use -------------------
+# A first look with no controls. Positive means higher score goes
+# with more use.
+#
+# One is a 0/1 yes-no and the other is a 24-point scale, 
+# so even a real relationship won't produce a big correlation.
+
+subs <- c(alcohol  = "Alcohol",
+          binge    = "Binge drinking",
+          cannabis = "Cannabis",
+          nicotine = "Nicotine")
+
+cat("\n===== Raw correlations with substance use =====\n")
+raw_cor <- outer(scores, names(subs),
+                 Vectorize(function(s, v)
+                   cor(dat[[s]], dat[[v]], use = "complete.obs")))
+dimnames(raw_cor) <- list(scores, subs)
+print(round(raw_cor, 3))
