@@ -241,3 +241,118 @@ raw_cor <- outer(scores, names(subs),
                    cor(dat[[s]], dat[[v]], use = "complete.obs")))
 dimnames(raw_cor) <- list(scores, subs)
 print(round(raw_cor, 3))
+
+# ---- 4. The models --------------------------------------------
+# One model per score, per substance. Sixteen in total.
+#
+# Each score gets converted to standard deviations first. That way
+# every result reads "per one standard deviation" and a 4-24 scale
+# can sit next to a 0-24 scale on the same chart. Without it the
+# bars aren't comparable and a longer one doesn't mean more.
+#
+# Greek membership is a control, not left out. Greek students have
+# both high belonging and high drinking, so including it begs the
+# question: does belonging still predict drinking once
+# Greek life is accounted for?
+
+ctrl <- c("age", "class_yr", "greek_any", "housing", "first_gen")
+ctrl <- ctrl[ctrl %in% names(dat)]
+
+cat("\nControlling for:", paste(ctrl, collapse = ", "), "\n")
+
+for (s in scores) dat[[paste0(s, "_z")]] <- as.numeric(scale(dat[[s]]))
+
+res <- lapply(scores, function(s) {
+  lapply(names(subs), function(v) {
+    
+    f   <- reformulate(c(paste0(s, "_z"), ctrl), response = v)
+    fit <- glm(f, data = dat, family = binomial)
+    
+    b  <- coef(fit)[2]
+    se <- sqrt(diag(vcov(fit)))[2]
+    
+    data.frame(score     = s,
+               substance = subs[v],
+               or        = exp(b),
+               low       = exp(b - 1.96 * se),
+               high      = exp(b + 1.96 * se),
+               p         = summary(fit)$coefficients[2, 4],
+               n         = nobs(fit),
+               row.names = NULL)
+  }) %>% bind_rows()
+}) %>% bind_rows()
+
+res$p_adj <- p.adjust(res$p, "BH")
+
+cat("\n===== Odds ratios, per 1 SD of each score =====\n")
+cat("Above 1 = more use. Below 1 = less. If low-high crosses 1, no clear link.\n\n")
+
+res %>%
+  mutate(across(c(or, low, high), ~ round(., 2)),
+         across(c(p, p_adj), ~ round(., 3))) %>%
+  print(row.names = FALSE)
+
+write.csv(res, "out/substance_wellbeing.csv", row.names = FALSE)
+
+# ---- 5. The chart ---------------------------------------------
+# Dot is the estimate, line is the range it probably sits in. The
+# dashed line at 1 is no difference. Solid dots cleared it, hollow
+# ones didn't, so the picture answers "which of these mattered".
+
+lab <- c(belonging   = "Belonging",
+         loneliness  = "Loneliness",
+         k6          = "Distress",
+         flourishing = "Wellbeing")
+
+plot_dat <- res %>%
+  mutate(score = lab[score],
+         clear = low > 1 | high < 1)
+
+f <- ggplot(plot_dat, aes(or, score)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey") +
+  geom_errorbarh(aes(xmin = low, xmax = high), height = 0,
+                 linewidth = 0.8, color = "grey") +
+  geom_point(aes(fill = clear), shape = 21, size = 3.5,
+             stroke = 0.9, color = "grey", show.legend = FALSE) +
+  scale_fill_manual(values = c("TRUE" = "red3", "FALSE" = "white")) +
+  scale_x_log10() +
+  facet_wrap(~ substance) +
+  labs(title = "Wellbeing and substance use",
+       subtitle = paste("Odds per 1 SD higher score.",
+                        "Hollow = no clear link."),
+       x = "Odds ratio (log scale)", y = NULL,
+       caption = "NCHA-IIIb | UTK | Spring 2026") +
+  theme_minimal(base_size = 14) +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(color = "grey", size = 10),
+        panel.grid.major.y = element_blank(),
+        axis.text = element_text(color = "black"),
+        strip.text = element_text(face = "bold"))
+
+print(f)
+ggsave("out/fig_substance_wellbeing.png", f, width = 9, height = 6, dpi = 300)
+
+# ---- 6. Reading it -------------------------------------------
+# Belonging going UP with drinking is the expected result.
+# Drinking is social. The students who feel most
+# connected are often the ones at the party. If that's what shows
+# up, it's the finding, and it means "build connection" is not by
+# itself an alcohol prevention strategy.
+#
+# Loneliness and distress going up with use is the other story:
+# drinking to cope rather than to socialize.
+#
+# Both can be true at once for different substances. Alcohol is
+# usually social, nicotine and cannabis usually aren't.
+#
+# What I can't say: which came first. This is one survey at one
+# moment, so a student who drinks because she's lonely and a
+# student who became lonely after her drinking got worse look
+# identical in my data.
+
+cat("\n-- Clear links --\n")
+plot_dat %>%
+  filter(clear) %>%
+  arrange(desc(abs(log(or)))) %>%
+  with(cat(sprintf("%s / %s: %.2f (%.2f-%.2f)\n",
+                   substance, score, or, low, high)))
