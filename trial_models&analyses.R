@@ -249,13 +249,8 @@ print(round(raw_cor, 3))
 # every result reads "per one standard deviation" and a 4-24 scale
 # can sit next to a 0-24 scale on the same chart. Without it the
 # bars aren't comparable and a longer one doesn't mean more.
-#
-# Greek membership is a control, not left out. Greek students have
-# both high belonging and high drinking, so including it begs the
-# question: does belonging still predict drinking once
-# Greek life is accounted for?
 
-ctrl <- c("age", "class_yr", "greek_any", "housing", "first_gen")
+ctrl <- c("age", "class_yr", "housing", "first_gen")
 ctrl <- ctrl[ctrl %in% names(dat)]
 
 cat("\nControlling for:", paste(ctrl, collapse = ", "), "\n")
@@ -332,7 +327,7 @@ f <- ggplot(plot_dat, aes(or, score)) +
 print(f)
 ggsave("out/fig_substance_wellbeing.png", f, width = 9, height = 6, dpi = 300)
 
-# ---- 6. Reading it -------------------------------------------
+# ---- 6. Reading it ----------------------------------------
 # Belonging going UP with drinking is the expected result.
 # Drinking is social. The students who feel most
 # connected are often the ones at the party. If that's what shows
