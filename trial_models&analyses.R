@@ -213,22 +213,9 @@ dat <- dat %>%
     nicotine = as.integer(rowSums(nm == 1, na.rm = TRUE) > 0)
   )
 
-# ---- 2. How the four wellbeing scores relate ------------------
-# Do these four measure separate things, or
-# are they the same thing wearing different hats?
-#
-
-scores <- c("belonging", "loneliness", "k6", "flourishing")
-
-cat("===== How the four scores correlate =====\n")
-print(round(cor(dat[scores], use = "pairwise.complete.obs"), 2))
-
-# ---- 3. Raw correlations with substance use -------------------
+# ---- 2. Raw correlations with substance use -------------------
 # A first look with no controls. Positive means higher score goes
 # with more use.
-#
-# One is a 0/1 yes-no and the other is a 24-point scale, 
-# so even a real relationship won't produce a big correlation.
 
 subs <- c(alcohol  = "Alcohol",
           binge    = "Binge drinking",
@@ -242,7 +229,7 @@ raw_cor <- outer(scores, names(subs),
 dimnames(raw_cor) <- list(scores, subs)
 print(round(raw_cor, 3))
 
-# ---- 4. The models --------------------------------------------
+# ---- 3. The models --------------------------------------------
 # One model per score, per substance. Sixteen in total.
 #
 # Each score gets converted to standard deviations first. That way
@@ -289,10 +276,10 @@ res %>%
 
 write.csv(res, "out/substance_wellbeing.csv", row.names = FALSE)
 
-# ---- 5. The chart ---------------------------------------------
+# ---- 4. The chart ---------------------------------------------
 # Dot is the estimate, line is the range it probably sits in. The
 # dashed line at 1 is no difference. Solid dots cleared it, hollow
-# ones didn't, so the picture answers "which of these mattered".
+# ones didn't, so the picture answers "which of these should we look at".
 
 lab <- c(belonging   = "Belonging",
          loneliness  = "Loneliness",
