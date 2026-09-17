@@ -181,7 +181,7 @@ f <- ggplot(plot_dat, aes(reorder(measure, d), d, fill = d > 0)) +
 print(f)
 ggsave("out/fig_firstgen.png", f, width = 8, height = 5, dpi = 300)
 
-#==============SUBSTANCE USE X WELLBEING, BELONGING, LONELINESS=============
+#==============SUBSTANCE USE X WELLBEING, BELONGING, LONELINESS (Z-TEST ANALYSIS)=============
 #
 # ---- 1. Mark who used each substance --------------------------
 # 
