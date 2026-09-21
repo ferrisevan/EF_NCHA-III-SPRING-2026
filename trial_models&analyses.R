@@ -306,7 +306,7 @@ f <- ggplot(plot_dat, aes(or, score)) +
   facet_wrap(~ substance) +
   labs(title = "Wellbeing and substance use",
        subtitle = paste("Odds per 1 SD higher score.",
-                        "Hollow = no clear link."),
+                        "Empty circle = no clear link."),
        x = "Odds ratio (log scale)", y = NULL,
        caption = "NCHA-IIIb | UTK | Spring 2026") +
   theme_minimal(base_size = 14) +
