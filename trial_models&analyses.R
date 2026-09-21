@@ -181,7 +181,7 @@ f <- ggplot(plot_dat, aes(reorder(measure, d), d, fill = d > 0)) +
 print(f)
 ggsave("out/fig_firstgen.png", f, width = 8, height = 5, dpi = 300)
 
-#==============SUBSTANCE USE X WELLBEING, BELONGING, LONELINESS (Z-TEST ANALYSIS)=============
+#==============SUBSTANCE USE X WELLBEING, BELONGING, LONELINESS (LOGISTIC REGRESSION)=============
 #
 # ---- 1. Mark who used each substance --------------------------
 # 
@@ -189,6 +189,8 @@ ggsave("out/fig_firstgen.png", f, width = 8, height = 5, dpi = 300)
 # questions were skipped because of an earlier answer, so a blank
 # means no. And the cannabis question lists answers from most
 # recent to least, so recent users are the middle codes.
+
+library(forcats)   # needed for fct_collapse() to group small categories together
 
 col1 <- function(p) {
   h <- grep(p, names(dat), value = TRUE)
@@ -212,6 +214,11 @@ dat <- dat %>%
     cannabis = as.integer(.data[[q24]] %in% 2:4),
     nicotine = as.integer(rowSums(nm == 1, na.rm = TRUE) > 0)
   )
+
+# A skip on the binge or nicotine questions means the student said
+# earlier they don't drink or don't use nicotine, so the survey
+# never asked. That's a real "no" which is
+# why it's fine to turn those blanks into 0 above.
 
 # ---- 2. Raw correlations with substance use -------------------
 # A first look with no controls. Positive means higher score goes
@@ -242,7 +249,28 @@ print(round(raw_cor, 3))
 # can sit next to a 0-24 scale on the same chart. Without it the
 # bars aren't comparable and a longer one doesn't mean more.
 
-ctrl <- c("age", "class_yr", "housing", "first_gen")
+# A few class_yr and housing categories only have a handful of
+# students in them (like not seeking a degree or couch
+# surfing). With so few people in a category, the model can't get
+# a stable answer for it and throws numbers out for
+# just that category. Grouping those small categories into one
+# "other" group fixes that without dropping the variable. I
+# checked this against the uncollapsed version and it cleaned up
+# the bad numbers without changing the main results.
+
+dat <- dat %>%
+  mutate(
+    class_yr_c = fct_collapse(class_yr,
+                              "Grad/other" = c("Master's  (MA, MS, MFA, MBA, MPP, MPA, MPH, etc)",
+                                               "Doctorate (PhD, EdD, MD, JD, etc)",
+                                               "Not seeking a degree",
+                                               "Other (please specify):")),
+    housing_c = fct_collapse(housing,
+                             "Other/unstable" = c("Temporarily staying with a relative, friend, or “couch surfing” until I find housing",
+                                                  "Other (please specify)"))
+  )
+
+ctrl <- c("age", "class_yr_c", "housing_c", "first_gen")
 ctrl <- ctrl[ctrl %in% names(dat)]
 
 cat("\nControlling for:", paste(ctrl, collapse = ", "), "\n")
@@ -271,6 +299,17 @@ res <- lapply(scores, function(s) {
 
 res$p_adj <- p.adjust(res$p, "BH")
 
+# A wide gap between low and high means the model doesn't have
+# enough people to be sure either way, which is different than
+# sitting tightly around 1 (no link, and I'm confident about
+# that). Sorting by width makes it easy to tell those two apart
+# instead of lumping every "not significant" result together.
+
+res <- res %>% mutate(ci_width = high - low)
+res %>% arrange(desc(ci_width)) %>%
+  select(score, substance, or, ci_width, p, p_adj, n) %>%
+  print(row.names = FALSE)
+
 cat("\n===== Odds ratios, per 1 SD of each score =====\n")
 cat("Above 1 = more use. Below 1 = less. If low-high crosses 1, no clear link.\n\n")
 
@@ -284,7 +323,7 @@ write.csv(res, "out/substance_wellbeing.csv", row.names = FALSE)
 # ---- 4. The chart ---------------------------------------------
 # Dot is the estimate, line is the range it probably sits in. The
 # dashed line at 1 is no difference. Solid dots cleared it, hollow
-# ones didn't, so the picture answers "which of these should we look at".
+# ones didn't, so the picture tells us which of these should we look at.
 
 lab <- c(belonging   = "Belonging",
          loneliness  = "Loneliness",
