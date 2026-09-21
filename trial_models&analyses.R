@@ -217,6 +217,11 @@ dat <- dat %>%
 # A first look with no controls. Positive means higher score goes
 # with more use.
 
+scores <- c("belonging", "loneliness", "k6", "flourishing")
+
+cat("===== How the four scores correlate =====\n")
+print(round(cor(dat[scores], use = "pairwise.complete.obs"), 2))
+
 subs <- c(alcohol  = "Alcohol",
           binge    = "Binge drinking",
           cannabis = "Cannabis",
