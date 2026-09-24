@@ -5,7 +5,7 @@
 #   find columns -> blank out non-answers -> fix Yes/No coding
 #   -> build scores -> check
 #
-# Saves data/ncha_clean.rds. Load that from now on.
+# Saves data/ncha_clean_2026.rds. Load that from now on.
 #
 # NOT IN THIS DATASET: sex assigned at birth (N3Q67), gender
 # identity, sexual orientation (N3Q68), and race/ethnicity (N3Q75).
@@ -18,8 +18,8 @@ library(haven)
 library(tidyverse)
 library(psych)
 
-dir.create("out",  showWarnings = FALSE)
-dir.create("data", showWarnings = FALSE)
+dir.create("2026 out",  showWarnings = FALSE)
+dir.create("2026 data", showWarnings = FALSE)
 
 raw <- read_sav("NCHA-III WEB SPRING 2026 UNIVERSITY OF TENNESSEE KNOXVILLE.sav")
 cat("Rows:", nrow(raw), "Columns:", ncol(raw), "\n")
@@ -182,7 +182,7 @@ rel <- data.frame(
                   alpha_of(belong), alpha_of(safety_i), alpha_of(cdrisc)), 3)
 )
 print(rel)
-write.csv(rel, "out/scale_reliability.csv", row.names = FALSE)
+write.csv(rel, "2026 out/scale_reliability.csv", row.names = FALSE)
 
 
 # ---- 7. Demographics as factors -----------------------------
@@ -313,10 +313,10 @@ cat("\nNot available (not collected): sex at birth, gender identity,",
 # did you feel nervous?" instead of "N3Q44A".
 
 dat <- zap_labels(dat)
-saveRDS(dat, "data/ncha_clean.rds")
-cat("Saved data/ncha_clean.rds\n")
+saveRDS(dat, "2026 data/ncha_clean_2026.rds")
+cat("Saved 2026 data/ncha_clean_2026.rds\n")
 
-# Next session:  dat <- readRDS("data/ncha_clean.rds")
+# Next session:  dat <- readRDS("2026 data/ncha_clean_2026.rds")
 #
 # Yes/No outcomes are already 0/1, so a logistic model just runs:
 #   glm(N3Q54B ~ belonging + age, data = dat, family = binomial)

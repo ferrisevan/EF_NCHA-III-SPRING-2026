@@ -6,7 +6,7 @@
 
 library(tidyverse)
 
-dat <- readRDS("data/ncha_clean.rds")
+dat <- readRDS("data/ncha_clean_2026.rds")
 
 # ---- 1. Mark who drinks ---------------------------------------
 # Same two definitions I've used all along. Alcohol is any use in

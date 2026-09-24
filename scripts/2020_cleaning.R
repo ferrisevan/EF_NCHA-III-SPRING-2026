@@ -1,21 +1,21 @@
 # =============================================================
-# NCHA-III (Spring 2023, UTK)
+# NCHA-III (Spring 2020, UTK)
 #
 # Only what's needed to make the data analyzable:
 #   find columns -> blank out non-answers -> fix Yes/No coding
 #   -> build scores -> check
 #
-# Saves data/ncha_clean_2023.rds. Load that from now on.
+# Saves data/ncha_clean_2020.rds. Load that from now on.
 #
 
 library(haven)
 library(tidyverse)
 library(psych)
 
-dir.create("2023 out",  showWarnings = FALSE)
-dir.create("2023 data", showWarnings = FALSE)
+dir.create("2020 out",  showWarnings = FALSE)
+dir.create("2020 data", showWarnings = FALSE)
 
-raw <- read_sav("NCHA-III WEB SPRING 2023 UNIVERSITY OF TENNESSEE KNOXVILLE.sav")
+raw <- read_sav("NCHA-III WEB FALL 2019 SPRING 2020 UNIVERSITY OF TENNESSEE KNOXVILLE.sav")
 cat("Rows:", nrow(raw), "Columns:", ncol(raw), "\n")
 
 # ---- 1. Find the columns ------------------------------------
@@ -176,7 +176,7 @@ rel <- data.frame(
                   alpha_of(belong), alpha_of(safety_i), alpha_of(cdrisc)), 3)
 )
 print(rel)
-write.csv(rel, "2023 out/scale_reliability.csv", row.names = FALSE)
+write.csv(rel, "2020 out/scale_reliability.csv", row.names = FALSE)
 
 
 # ---- 7. Demographics as factors -----------------------------
@@ -307,8 +307,8 @@ cat("\nNot available (not collected): sex at birth, gender identity,",
 # did you feel nervous?" instead of "N3Q44A".
 
 dat <- zap_labels(dat)
-saveRDS(dat, "2023 data/ncha_clean_2023.rds")
-cat("Saved 2023 data/ncha_clean_2023.rds\n")
+saveRDS(dat, "2020 data/ncha_clean_2020.rds")
+cat("Saved 2020 data/ncha_clean_2020.rds\n")
 
 # Next session:  dat <- readRDS("data/ncha_clean.rds")
 #
