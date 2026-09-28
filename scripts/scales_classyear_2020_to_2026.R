@@ -3,8 +3,7 @@
 # Do the different scale scores differ by year in school?
 #
 # Built so I can drop in the 2020 and 2023 files later without
-# rewriting anything. Add one line to the list in section 1 and
-# everything below adapts on its own.
+# rewriting anything.
 #
 # One thing to be clear about up front: these are three separate
 # groups of students, not the same students followed over time.
@@ -15,11 +14,6 @@ library(psych)
 # ---- 1. Load the years ---------------------------------------
 # Add a line per survey year. The name on the left is what shows
 # up in the tables and on the chart.
-#
-# Every file has to be cleaned and scored by the same script. If
-# 2024 used a different prorating rule or a different set of
-# items, the years aren't comparable and this whole thing is
-# measuring my own coding changes instead of my students.
 
 files <- c(
   "2026" = "2026 data/ncha_clean_2026.rds",
@@ -118,7 +112,7 @@ tab %>%
   mutate(across(c(mean, sd, se), ~ round(., 2))) %>%
   print(n = Inf)
 
-write.csv(tab, "2026 out/classyr_scales.csv", row.names = FALSE)
+write.csv(tab, "2026 out/classyr_scales_allyears.csv", row.names = FALSE)
 
 
 # ---- 4. Is the spread real? ----------------------------------
@@ -126,8 +120,7 @@ write.csv(tab, "2026 out/classyr_scales.csv", row.names = FALSE)
 #
 # With a single survey year the question is just "do the class
 # years differ." Once I add 2020 and 2023 the model also asks
-# whether that pattern changed between years, which is the actual
-# longitudinal question. The formula switches on its own.
+# whether that pattern changed between years.
 
 multi <- nlevels(dat$year) > 1
 
@@ -162,7 +155,7 @@ fits %>%
          across(c(p, p_adj), ~ round(., 4))) %>%
   print(row.names = FALSE)
 
-write.csv(fits, "2026 out/classyr_scales_models.csv", row.names = FALSE)
+write.csv(fits, "2026 out/classyr_scales_models_allyears.csv", row.names = FALSE)
 
 cat("\nterm 'cy'      = do the class years differ\n")
 if (multi) {
@@ -188,7 +181,7 @@ f <- ggplot(tab, aes(cy, mean, group = year, color = year)) +
   facet_wrap(~ scale, scales = "free_y") +
   scale_color_manual(values = c("#B3352E", "#4C72B0", "#8C8C8C"),
                      name = NULL) +
-  labs(title = "Scores by year in school",
+  labs(title = "Scores by year in school (all years)",
        subtitle = "Bars are 95% confidence intervals.",
        x = NULL, y = "Mean score",
        caption = "NCHA-III | UTK") +
@@ -202,4 +195,4 @@ f <- ggplot(tab, aes(cy, mean, group = year, color = year)) +
         strip.text = element_text(face = "bold"))
 
 print(f)
-ggsave("2026 out/fig_classyr_scales.png", f, width = 11, height = 7, dpi = 300)
+ggsave("2026 out/fig_classyr_scales_allyears.png", f, width = 11, height = 7, dpi = 300)
