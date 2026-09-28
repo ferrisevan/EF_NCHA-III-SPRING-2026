@@ -53,7 +53,7 @@ print(table(dat$year, useNA = "ifany"))
 # instead. Anything unmatched keeps its original text, so a
 # wording change in a future export can't blank a group.
 #
-# Then drop any year-by-class-year cell under 30 students. An
+# Then drop any year-by-class-year cell under 20 students. An
 # average built from 4 people is not an average.
 
 short <- function(x) {
@@ -79,9 +79,9 @@ dat <- dat %>%
 
 keep <- dat %>%
   summarise(n = n(), .by = c(year, cy)) %>%
-  filter(n >= 30)
+  filter(n >= 20)
 
-cat("\nGroups kept (n >= 30):\n")
+cat("\nGroups kept (n >= 20):\n")
 print(as.data.frame(keep), row.names = FALSE)
 
 dat <- dat %>%
