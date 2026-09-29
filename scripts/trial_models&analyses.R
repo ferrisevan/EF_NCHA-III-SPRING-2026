@@ -190,6 +190,7 @@ ggsave("out/fig_firstgen.png", f, width = 8, height = 5, dpi = 300)
 # means no. And the cannabis question lists answers from most
 # recent to least, so recent users are the middle codes.
 
+dat <- readRDS("2026 data/ncha_clean_2026.rds")
 library(forcats)   # needed for fct_collapse() to group small categories together
 
 col1 <- function(p) {
@@ -318,7 +319,7 @@ res %>%
          across(c(p, p_adj), ~ round(., 3))) %>%
   print(row.names = FALSE)
 
-write.csv(res, "out/substance_wellbeing.csv", row.names = FALSE)
+write.csv(res, "2026 out/substance_verified_measures.csv", row.names = FALSE)
 
 # ---- 4. The chart ---------------------------------------------
 # Dot is the estimate, line is the range it probably sits in. The
@@ -343,7 +344,7 @@ f <- ggplot(plot_dat, aes(or, score)) +
   scale_fill_manual(values = c("TRUE" = "red3", "FALSE" = "white")) +
   scale_x_log10() +
   facet_wrap(~ substance) +
-  labs(title = "Wellbeing and substance use",
+  labs(title = "Wellbeing scales and substance use",
        subtitle = paste("Odds per 1 SD higher score.",
                         "Empty circle = no clear link."),
        x = "Odds ratio (log scale)", y = NULL,
@@ -356,7 +357,7 @@ f <- ggplot(plot_dat, aes(or, score)) +
         strip.text = element_text(face = "bold"))
 
 print(f)
-ggsave("out/fig_substance_wellbeing.png", f, width = 9, height = 6, dpi = 300)
+ggsave("2026 out/fig_substance_verified_measures.png", f, width = 9, height = 6, dpi = 300)
 
 # ---- 6. Reading it ----------------------------------------
 # Belonging going UP with drinking is the expected result.
