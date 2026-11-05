@@ -1,0 +1,52 @@
+"outcome","group","level","n","pct","cases"
+"Serious distress","Student level","Grad",229,15.7205240174673,36
+"Serious distress","Student level","Undergrad",468,16.6666666666667,78
+"Lonely","Student level","Grad",227,42.2907488986784,96
+"Lonely","Student level","Undergrad",467,45.610278372591,213
+"Suicide risk screen","Student level","Grad",228,26.7543859649123,61
+"Suicide risk screen","Student level","Undergrad",463,24.4060475161987,113
+"Serious distress","First generation","Continuing-gen",511,16.2426614481409,83
+"Serious distress","First generation","First-gen",177,16.3841807909604,29
+"Lonely","First generation","Continuing-gen",509,42.2396856581532,215
+"Lonely","First generation","First-gen",177,51.9774011299435,92
+"Suicide risk screen","First generation","Continuing-gen",509,24.5579567779961,125
+"Suicide risk screen","First generation","First-gen",176,26.7045454545455,47
+"Serious distress","Disability","No",538,13.1970260223048,71
+"Serious distress","Disability","Yes",155,27.741935483871,43
+"Lonely","Disability","No",535,42.4299065420561,227
+"Lonely","Disability","Yes",155,52.9032258064516,82
+"Suicide risk screen","Disability","No",534,19.4756554307116,104
+"Suicide risk screen","Disability","Yes",155,45.1612903225806,70
+"Serious distress","International","No",50,16,8
+"Serious distress","International","Yes",647,16.3833075734158,106
+"Lonely","International","No",50,40,20
+"Lonely","International","Yes",644,44.8757763975155,289
+"Suicide risk screen","International","No",50,22,11
+"Suicide risk screen","International","Yes",641,25.4290171606864,163
+"Serious distress","Housing","Off campus",518,16.023166023166,83
+"Serious distress","Housing","On campus",179,17.3184357541899,31
+"Lonely","Housing","Off campus",515,41.747572815534,215
+"Lonely","Housing","On campus",179,52.5139664804469,94
+"Suicide risk screen","Housing","Off campus",515,24.8543689320388,128
+"Suicide risk screen","Housing","On campus",176,26.1363636363636,46
+"Serious distress","Greek life","No",572,17.4825174825175,100
+"Serious distress","Greek life","Yes",124,11.2903225806452,14
+"Lonely","Greek life","No",570,46.6666666666667,266
+"Lonely","Greek life","Yes",123,34.9593495934959,43
+"Suicide risk screen","Greek life","No",569,27.4165202108963,156
+"Suicide risk screen","Greek life","Yes",121,14.8760330578512,18
+"Serious distress","Athlete","No",568,17.9577464788732,102
+"Serious distress","Athlete","Yes",124,8.87096774193548,11
+"Lonely","Athlete","No",566,45.7597173144876,259
+"Lonely","Athlete","Yes",123,40.650406504065,50
+"Suicide risk screen","Athlete","No",567,27.689594356261,157
+"Suicide risk screen","Athlete","Yes",122,13.9344262295082,17
+"Serious distress","Relationship status","In a relationship but not married/partnered",245,17.9591836734694,44
+"Serious distress","Relationship status","Married/partnered",98,15.3061224489796,15
+"Serious distress","Relationship status","Not in a relationship",352,15.625,55
+"Lonely","Relationship status","In a relationship but not married/partnered",244,40.5737704918033,99
+"Lonely","Relationship status","Married/partnered",98,23.469387755102,23
+"Lonely","Relationship status","Not in a relationship",351,53.2763532763533,187
+"Suicide risk screen","Relationship status","In a relationship but not married/partnered",244,27.8688524590164,68
+"Suicide risk screen","Relationship status","Married/partnered",98,29.5918367346939,29
+"Suicide risk screen","Relationship status","Not in a relationship",347,22.1902017291066,77
