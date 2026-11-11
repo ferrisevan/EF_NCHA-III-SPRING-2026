@@ -183,7 +183,7 @@ figB <- ggplot(grad, aes(pn, pct, group = measure)) +
   labs(title = "More protective factors, better outcomes",
        subtitle = "Belonging, resilience, safety, rested, food secure, would seek help",
        x = "Number of protective factors", y = "% of students",
-       caption = "NCHA-IIIb | University of Tennessee | Spring 2026") +
+       caption = "NCHA-III | University of Tennessee | 2026") +
   theme_minimal(base_size = 14) +
   theme(plot.title = element_text(face = "bold", size = 17),
         plot.subtitle = element_text(color = "grey30", size = 10),
